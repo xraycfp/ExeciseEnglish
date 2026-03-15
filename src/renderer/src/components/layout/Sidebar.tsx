@@ -10,7 +10,7 @@ function Sidebar(): React.ReactElement {
   return (
     <aside className="w-56 bg-white border-r border-gray-200 flex flex-col h-full">
       <div className="p-4 border-b border-gray-200">
-        <h1 className="text-lg font-bold text-primary-700">ExerciseEnglish</h1>
+        <h1 className="text-lg font-bold text-primary-700">EchoEnglish</h1>
         <p className="text-xs text-gray-500 mt-1">回音法英语练习</p>
       </div>
 

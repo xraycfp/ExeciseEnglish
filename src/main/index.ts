@@ -70,7 +70,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.exercise-english')
+  electronApp.setAppUserModelId('com.echo-english')
 
   // Handle media:// protocol - serves local files with Range request support for seeking
   protocol.handle('media', (request) => {

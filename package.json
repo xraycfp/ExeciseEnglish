@@ -1,5 +1,5 @@
 {
-  "name": "exercise-english",
+  "name": "echo-english",
   "version": "1.0.0",
   "description": "English practice app using Echo Method (回音法)",
   "main": "./out/main/index.js",

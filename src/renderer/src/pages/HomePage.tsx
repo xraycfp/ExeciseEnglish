@@ -15,7 +15,7 @@ function HomePage(): React.ReactElement {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">欢迎使用 ExerciseEnglish</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">欢迎使用 EchoEnglish</h1>
         <p className="text-gray-500">通过回音法高效练习英语听说能力</p>
       </div>
 

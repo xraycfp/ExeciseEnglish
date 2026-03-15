@@ -1,4 +1,4 @@
-# ExerciseEnglish - 回音法英语练习
+# EchoEnglish - 回音法英语练习
 
 一款基于**回音法（Echo Method）** 的英语练习桌面应用，帮助你通过「听 → 回想 → 模仿 → 对比」的方式高效提升英语听说能力。
 
@@ -99,8 +99,8 @@ src/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/<your-username>/ExerciseEnglish.git
-cd ExerciseEnglish
+git clone https://github.com/<your-username>/EchoEnglish.git
+cd EchoEnglish
 
 # 安装依赖
 npm install

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ExerciseEnglish (回音法英语练习) — an Electron desktop app for English practice using the Echo Method. Built with Electron 33 + React 18 + TypeScript + Vite + Tailwind CSS 3.
+EchoEnglish (回音法英语练习) — an Electron desktop app for English practice using the Echo Method. Built with Electron 33 + React 18 + TypeScript + Vite + Tailwind CSS 3.
 
 ## Development Commands
 
