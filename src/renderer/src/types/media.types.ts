@@ -9,6 +9,7 @@ export interface MediaRecord {
   importedAt: string
   transcriptionStatus: 'pending' | 'processing' | 'completed' | 'failed'
   thumbnailPath: string | null
+  lastPlaybackPosition: number | null
 }
 
 export interface TranscriptSegment {

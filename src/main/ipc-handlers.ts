@@ -10,7 +10,7 @@ export function registerIpcHandlers(): void {
   })
 
   ipcMain.handle('media:importFile', async (_event, filePath: string) => {
-    return importMediaFile(filePath)
+    return await importMediaFile(filePath)
   })
 
   ipcMain.handle('media:list', async () => {

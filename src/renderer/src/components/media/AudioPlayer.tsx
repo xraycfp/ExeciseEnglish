@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 
 
 interface AudioPlayerProps {
   src: string
+  initialTime?: number
   onTimeUpdate?: (currentTime: number) => void
   onDurationChange?: (duration: number) => void
   onEnded?: () => void
@@ -18,9 +19,10 @@ export interface AudioPlayerHandle {
 }
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
-  ({ src, onTimeUpdate, onDurationChange, onEnded, className = '' }, ref) => {
+  ({ src, initialTime, onTimeUpdate, onDurationChange, onEnded, className = '' }, ref) => {
     const audioRef = useRef<HTMLAudioElement>(null)
     const segmentEndRef = useRef<number | null>(null)
+    const initialTimeApplied = useRef(false)
 
     useImperativeHandle(ref, () => ({
       play: () => audioRef.current?.play(),
@@ -58,6 +60,27 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
       audio.addEventListener('timeupdate', handleTimeUpdate)
       return () => audio.removeEventListener('timeupdate', handleTimeUpdate)
     }, [handleTimeUpdate])
+
+    // Restore initial playback position once the element is seekable
+    useEffect(() => {
+      const audio = audioRef.current
+      if (!audio || !initialTime || initialTime <= 0 || initialTimeApplied.current) return
+
+      const doSeek = (): void => {
+        if (initialTimeApplied.current) return
+        audio.currentTime = initialTime
+        initialTimeApplied.current = true
+      }
+
+      // Already loaded enough data to seek
+      if (audio.readyState >= 2) {
+        doSeek()
+        return
+      }
+
+      audio.addEventListener('loadeddata', doSeek)
+      return () => audio.removeEventListener('loadeddata', doSeek)
+    }, [initialTime])
 
     return (
       <div className={`bg-gray-100 rounded-lg p-4 ${className}`}>

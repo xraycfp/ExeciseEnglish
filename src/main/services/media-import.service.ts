@@ -1,8 +1,9 @@
 import { dialog } from 'electron'
-import { copyFileSync, statSync } from 'fs'
+import { copyFileSync, statSync, unlinkSync } from 'fs'
 import { join, basename, extname } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { db, type MediaRecord } from './database.service'
+import { needsConversion, convertToMp4 } from './media-convert.service'
 
 const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm', '.flv', '.wmv']
 const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma']
@@ -39,18 +40,36 @@ export async function showImportDialog(): Promise<MediaRecord | null> {
   return importMediaFile(result.filePaths[0])
 }
 
-export function importMediaFile(sourcePath: string): MediaRecord {
+export async function importMediaFile(sourcePath: string): Promise<MediaRecord> {
   const id = uuidv4()
   const ext = extname(sourcePath).toLowerCase()
   const title = basename(sourcePath, ext)
   const mediaType = getMediaType(ext)
   const stat = statSync(sourcePath)
 
-  // Copy file to app media directory
-  const destFileName = `${id}${ext}`
-  const destPath = join(db.getMediaDir(), destFileName)
-  copyFileSync(sourcePath, destPath)
+  let destPath: string
+  let finalExt = ext
 
+  if (mediaType === 'video' && needsConversion(ext)) {
+    // Convert non-web-native video to MP4 for Chromium compatibility (e.g. MKV with AC3 audio)
+    finalExt = '.mp4'
+    destPath = join(db.getMediaDir(), `${id}${finalExt}`)
+    try {
+      await convertToMp4(sourcePath, destPath)
+    } catch (err) {
+      console.error('FFmpeg conversion failed, copying original file:', err)
+      // Fallback: copy as-is (video may lack sound for unsupported audio codecs)
+      destPath = join(db.getMediaDir(), `${id}${ext}`)
+      copyFileSync(sourcePath, destPath)
+      finalExt = ext
+    }
+  } else {
+    // Web-native format or audio — copy directly
+    destPath = join(db.getMediaDir(), `${id}${ext}`)
+    copyFileSync(sourcePath, destPath)
+  }
+
+  const destStat = statSync(destPath)
   const record: MediaRecord = {
     id,
     title,
@@ -58,7 +77,7 @@ export function importMediaFile(sourcePath: string): MediaRecord {
     audioPath: null,
     mediaType,
     durationSeconds: null,
-    fileSizeBytes: stat.size,
+    fileSizeBytes: destStat.size,
     importedAt: new Date().toISOString(),
     transcriptionStatus: 'pending',
     thumbnailPath: null

@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 
 
 interface VideoPlayerProps {
   src: string
+  initialTime?: number
   onTimeUpdate?: (currentTime: number) => void
   onDurationChange?: (duration: number) => void
   onEnded?: () => void
@@ -18,9 +19,10 @@ export interface VideoPlayerHandle {
 }
 
 const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
-  ({ src, onTimeUpdate, onDurationChange, onEnded, className = '' }, ref) => {
+  ({ src, initialTime, onTimeUpdate, onDurationChange, onEnded, className = '' }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null)
     const segmentEndRef = useRef<number | null>(null)
+    const initialTimeApplied = useRef(false)
 
     useImperativeHandle(ref, () => ({
       play: () => videoRef.current?.play(),
@@ -58,6 +60,27 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       video.addEventListener('timeupdate', handleTimeUpdate)
       return () => video.removeEventListener('timeupdate', handleTimeUpdate)
     }, [handleTimeUpdate])
+
+    // Restore initial playback position once the element is seekable
+    useEffect(() => {
+      const video = videoRef.current
+      if (!video || !initialTime || initialTime <= 0 || initialTimeApplied.current) return
+
+      const doSeek = (): void => {
+        if (initialTimeApplied.current) return
+        video.currentTime = initialTime
+        initialTimeApplied.current = true
+      }
+
+      // Already loaded enough data to seek
+      if (video.readyState >= 2) {
+        doSeek()
+        return
+      }
+
+      video.addEventListener('loadeddata', doSeek)
+      return () => video.removeEventListener('loadeddata', doSeek)
+    }, [initialTime])
 
     return (
       <div className={`relative bg-black rounded-lg overflow-hidden ${className}`}>

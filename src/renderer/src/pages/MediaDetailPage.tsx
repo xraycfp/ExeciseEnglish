@@ -6,6 +6,8 @@ import VideoPlayer, { type VideoPlayerHandle } from '../components/media/VideoPl
 import AudioPlayer, { type AudioPlayerHandle } from '../components/media/AudioPlayer'
 import SegmentList from '../components/transcript/SegmentList'
 
+const SAVE_INTERVAL = 3000 // save playback position every 3 seconds
+
 function MediaDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -17,12 +19,41 @@ function MediaDetailPage(): React.ReactElement {
 
   const videoRef = useRef<VideoPlayerHandle>(null)
   const audioRef = useRef<AudioPlayerHandle>(null)
+  const currentTimeRef = useRef(0)
+
+  // Keep ref in sync for use in interval/cleanup callbacks
+  const handleTimeUpdate = useCallback((time: number) => {
+    setCurrentTime(time)
+    currentTimeRef.current = time
+  }, [])
 
   useEffect(() => {
     if (!id) return
-    window.api.getMediaById(id).then((m) => setMedia(m as MediaRecord | null))
+    window.api.getMediaById(id).then((m) => {
+      setMedia(m as MediaRecord | null)
+    })
     fetchSegments(id)
   }, [id, fetchSegments])
+
+  // Periodically save playback position
+  useEffect(() => {
+    if (!id) return
+    const interval = setInterval(() => {
+      if (currentTimeRef.current > 0) {
+        window.api.updateMedia(id, { lastPlaybackPosition: currentTimeRef.current })
+      }
+    }, SAVE_INTERVAL)
+    return () => clearInterval(interval)
+  }, [id])
+
+  // Save position on unmount (leaving the page)
+  useEffect(() => {
+    return () => {
+      if (id && currentTimeRef.current > 0) {
+        window.api.updateMedia(id, { lastPlaybackPosition: currentTimeRef.current })
+      }
+    }
+  }, [id])
 
   const playerRef = media?.mediaType === 'video' ? videoRef : audioRef
 
@@ -94,7 +125,8 @@ function MediaDetailPage(): React.ReactElement {
             <VideoPlayer
               ref={videoRef}
               src={media.filePath}
-              onTimeUpdate={setCurrentTime}
+              initialTime={media.lastPlaybackPosition ?? undefined}
+              onTimeUpdate={handleTimeUpdate}
               onDurationChange={handleDurationChange}
               className="aspect-video"
             />
@@ -102,7 +134,8 @@ function MediaDetailPage(): React.ReactElement {
             <AudioPlayer
               ref={audioRef}
               src={media.filePath}
-              onTimeUpdate={setCurrentTime}
+              initialTime={media.lastPlaybackPosition ?? undefined}
+              onTimeUpdate={handleTimeUpdate}
               onDurationChange={handleDurationChange}
             />
           )}

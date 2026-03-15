@@ -18,6 +18,7 @@ interface MediaRecord {
   importedAt: string
   transcriptionStatus: 'pending' | 'processing' | 'completed' | 'failed'
   thumbnailPath: string | null
+  lastPlaybackPosition: number | null
 }
 
 interface TranscriptSegment {
